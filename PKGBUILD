@@ -6,7 +6,7 @@
 : ${aur_llamacpp_cuda_arch:=native}
 pkgname=llama-cpp-turboquant-cuda-git
 _pkgname="${pkgname%-cuda-git}"
-pkgver=feature.turboquant.kv.cache.b9082.5aeb2fd.r0.5aeb2fdbe
+pkgver=feature.turboquant.kv.cache.b9999.8a891f4.r0.8a891f4b5
 pkgrel=1
 pkgdesc="Port of Facebook's LLaMA model in C/C++ with TurboQuant KV-cache compression (NVIDIA CUDA optimizations)"
 arch=(x86_64 aarch64)
@@ -27,6 +27,7 @@ makedepends=(
   gcc15   # (CUDA does not yet support GCC 16)
   git
   ninja
+  npm     # builds the embedded server Web UI
 )
 optdepends=(
 'ccache: greatly reduce package re-build time'
@@ -106,6 +107,12 @@ build() {
     -DGGML_CUDNN=ON
     -DGGML_CUDA_COMPRESSION_MODE=speed
     -DLLAMA_BUILD_SERVER=ON
+    # Build the Web UI from source with npm. The prebuilt HF bucket
+    # (ggml-org/llama-ui) does not ship loading.html, which this fork requires
+    # (tools/ui/embed.cpp), so the prebuilt path silently yields a UI-less
+    # server that answers / with a 404. Keep PREBUILT off so UI breakage is loud.
+    -DLLAMA_BUILD_UI=ON
+    -DLLAMA_USE_PREBUILT_UI=OFF
     -DLLAMA_BUILD_NUMBER="${_build_number}"
     -DLLAMA_BUILD_COMMIT="${_commit_id}"
     -DLLAMA_OPENSSL=ON
