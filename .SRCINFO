@@ -1,6 +1,6 @@
 pkgbase = llama-cpp-turboquant-cuda-git
 	pkgdesc = Port of Facebook's LLaMA model in C/C++ with TurboQuant KV-cache compression (NVIDIA CUDA optimizations)
-	pkgver = 0.0.0
+	pkgver = feature.turboquant.kv.cache.b9082.5aeb2fd.r0.5aeb2fdbe
 	pkgrel = 1
 	url = https://github.com/TheTom/llama-cpp-turboquant
 	arch = x86_64

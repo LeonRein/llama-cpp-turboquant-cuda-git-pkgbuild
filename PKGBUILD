@@ -1,11 +1,13 @@
 # Maintainer: LeonRein
 : ${aur_llamacpp_build_universal:=false}
+# CUDA architectures to compile for. "native" targets only the GPUs present in
+# this machine, which is much faster than the upstream default arch list.
+# Ignored for universal builds. Override with e.g. aur_llamacpp_cuda_arch="86;89"
+: ${aur_llamacpp_cuda_arch:=native}
 pkgname=llama-cpp-turboquant-cuda-git
 _pkgname="${pkgname%-cuda-git}"
 pkgver=feature.turboquant.kv.cache.b9082.5aeb2fd.r0.5aeb2fdbe
 pkgrel=1
-_build_number=0
-_commit_id=
 pkgdesc="Port of Facebook's LLaMA model in C/C++ with TurboQuant KV-cache compression (NVIDIA CUDA optimizations)"
 arch=(x86_64 aarch64)
 url='https://github.com/TheTom/llama-cpp-turboquant'
@@ -67,18 +69,16 @@ pkgver() {
   printf "%s" "$(git describe --long --tags | sed 's/\([^-]*-\)g/r\1/;s/-/./g')"
 }
 
-prepare() {
-  cd "${_pkgname}" || exit
-  # Get the latest commit hash
-  _commit_id=$(git rev-parse HEAD)
-  _build_number=$(git rev-list --count HEAD)
-  cd ..
-}
-
 build() {
   if ! type -P nvcc &>/dev/null && [[ -d /opt/cuda/bin ]]; then
     export PATH="/opt/cuda/bin:$PATH"
   fi
+
+  # Derived here rather than in prepare() so they are still correct when the
+  # prepare step is skipped (makepkg -e / --noprepare).
+  local _commit_id _build_number
+  _commit_id=$(git -C "${_pkgname}" rev-parse HEAD)
+  _build_number=$(git -C "${_pkgname}" rev-list --count HEAD)
 
   # Use GCC 15 as host compiler for nvcc (CUDA does not yet support GCC 16)
   # Override via: aur_llamacpp_cmakeopts="-DCMAKE_CUDA_HOST_COMPILER=/usr/bin/g++-XX"
@@ -124,6 +124,7 @@ build() {
     # $SOURCE_DATE_EPOCH in ENV
     _cmake_options+=(
       -DGGML_NATIVE=ON
+      -DCMAKE_CUDA_ARCHITECTURES="${aur_llamacpp_cuda_arch}"
     )
   fi
 
